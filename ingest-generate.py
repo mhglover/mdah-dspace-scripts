@@ -5,17 +5,16 @@ import os
 import shutil
 import argparse
 import re
-import urllib
+import urllib2
 
 
-
-def pull_files(list, output, bundle):
-	for f in list:
+def pull_files(fileslist, output, bundle):
+	for f in fileslist:
 			#interpret wildcard for dc.identifier
 			s = '\[dc.identifier\]'
-			r = i["dc.identifier"]
+			r = i['dc.identifier']
 			f = re.sub(s, r, f)
-
+			
 			#check to see if this is a local file
 			if(os.path.exists(f)):
 				shutil.copy(f, path)
@@ -26,23 +25,26 @@ def pull_files(list, output, bundle):
 			#check to see if this is a url
 			h = re.search('^http://', f)
 			if h:
-				webFile = urllib.urlopen(f)
-				local = f.split('/')[-1]
-				localFile = open(path + "/" + local, 'w')
-				localFile.write(webFile.read())
-				webFile.close()
-				localFile.close()
-				print "%s downloaded" % local
-				output.write('%s\tbundle:%s\n' % (local, bundle))
-	#this needs an error message if a file could not be pulled in
-
-
+				#try to open remote file
+				try:
+					webFile = urllib2.urlopen(f)
+				except IOError as e:
+					print 'ERROR: ' + f + ' could not be opened.'
+				else:
+					#if opened then write file to local machine
+					local = f.split('/')[-1]
+					localFile = open(path + '/' + local, 'w')
+					localFile.write(webFile.read())
+					webFile.close()
+					localFile.close()
+					print '%s downloaded' % local
+					output.write('%s\tbundle:%s\n' % (local, bundle))
 
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
-parser.add_argument('infile', default="sample.csv", type=argparse.FileType('r'), help='the CSV to process') ## source file, should be a properly formatted CSV
-parser.add_argument('outdir', default="test", help='the root for the directory structure to create') ## output folder
+parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process') ## source file, should be a properly formatted CSV
+parser.add_argument('outdir', default='test', help='the root for the directory structure to create') ## output folder
 parser.add_argument('-f', '--force', action='store_true', help='delete and overwrite the output directory structure')
 parser.add_argument('-c', '--carryon', action='store_true', help='ignore existing output files and continue generating new ones')
 
@@ -50,7 +52,7 @@ parser.add_argument('-c', '--carryon', action='store_true', help='ignore existin
 args = parser.parse_args()
 
 if args.force:
- 	print "deleting %s folder and contents" % args.outdir
+ 	print 'deleting %s folder and contents' % args.outdir
  	shutil.rmtree(args.outdir)
 
 
@@ -84,7 +86,7 @@ for i in data:
 		marc = open(path + '/metadata_marc.xml', 'w')		## open marc.xml file to write
 		marc.write(i['dc.marc'])	
 		marc.close()
-		print 'marc.xml for %s written.' % path
+		print 'metadata_marc.xml for %s written.' % path
 	#----------------------marc done--------------------------------------
 
 
@@ -96,7 +98,7 @@ for i in data:
 	dc.write('<dublin_core>\n')
 	
 	### Map DC elements with optional qualifiers to the .csv headers. Examples:
-	# ### Reference: http://dublincore.org/documents/dcmi-terms/	
+	### Reference: http://dublincore.org/documents/dcmi-terms/	
 
 	for name in i.keys():
 		if i[name] == "":
@@ -108,7 +110,7 @@ for i in data:
 			identifier = m.group(1)
 
 			#pull out the qualifier name
-			qualifier = "none"
+			qualifier = 'none'
 			q = re.search('^dc\.(.*)\.(.*)$', name)
 			if q:
 				identifier = q.group(1)
@@ -121,14 +123,14 @@ for i in data:
 				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, i[name]))
 		
 			
-	# ### Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
-	# ### Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
+	### Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
+	### Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
 	
 	# dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">DC-TYPE-VALUE</dcvalue>\n')	
 	
 	dc.write('</dublin_core>')
 	dc.close()																			
-	print(path+ '/dublin_core.xml written')
+	print(path + '/dublin_core.xml written')
 	#----------------------dublin core done --------------------------------------
 
 
@@ -142,25 +144,25 @@ for i in data:
 	#----------------------copy in files --------------------------------------
 	# the files field should be a plain list of the files that should be included
 	# we can use:
-	#	urls 						http://mdah.state.ms.us/arrec_digital_archives/moncrief/images/12321-photo.tif
+	#	urls							http://mdah.state.ms.us/arrec_digital_archives/moncrief/images/12321-photo.tif
 	#	local paths					images/12321-photo.tif
 	#	absolute paths				/workspace/moncrief/images/12321-photo.tif
 	#	id-related wildcards		/workspace/moncrief/images/[dc.identifier]-photo.tif
-	if "mdah.files" in i and i["mdah.files"] != "":
-		fileslist = i["mdah.files"].split("\n")
-		pull_files(fileslist, contents, "ORIGINAL")
+	if 'mdah.files' in i and i['mdah.files'] != "":
+		fileslist = i['mdah.files'].split('\n')
+		pull_files(fileslist, contents, 'ORIGINAL')
 
 	#----------------------files done--------------------------------------
 
 
 
 	#---------------------preservation files -------------------------------
-	###  Assign a file to a preservation bundle to keep the file inaccessible to certain users.
+	# Assign a file to a preservation bundle to keep the file inaccessible to certain users.
 	# contents.write(i['itembib']      + '-01-postcard.tif' + '\t' + 'bundle:PRESERVATION\n')
 
-	if "mdah.preservation" in i and i["mdah.preservation"] != "":
-			fileslist = i["mdah.preservation"].split("\n")
-			pull_files(fileslist, contents, "PRESERVATION")
+	if 'mdah.preservation' in i and i['mdah.preservation'] != "":
+			fileslist = i['mdah.preservation'].split('\n')
+			pull_files(fileslist, contents, 'PRESERVATION')
 			
 	#---------------------preservation files -------------------------------
 
