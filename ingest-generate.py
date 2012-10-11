@@ -1,10 +1,10 @@
 #!/usr/bin/python
-import csv
-import sys
-import os
-import shutil
 import argparse
+import csv
+import os
 import re
+import shutil
+import sys
 import urllib2
 
 
@@ -82,17 +82,25 @@ for i in data:
 		#skip the rest of the generation for this item
 		continue
 
-	#----------------------marc --------------------------------------
-	#generate marc file
-	#add a test to see if the marc field exists and has data
-	if 'dc.marc' in i and i['dc.marc'] != "":
-
-		marc = open(path + '/metadata_marc.xml', 'w')		## open marc.xml file to write
-		marc.write(i['dc.marc'])	
+	#----------------------marc-xml --------------------------------------
+	#generate marc xml file
+	#test to see if the xml marc field exists and has data
+	if 'mdah.marcxml' in i and i['mdah.marcxml'] != "":
+		marc = open(path + '/metadata_marc.xml', 'w')		## open metadata_marc.xml file to write
+		marc.write(i['mdah.marcxml'])	
 		marc.close()
 		print 'metadata_marc.xml for %s written.' % path
-	#----------------------marc done--------------------------------------
+	#----------------------marc-xml done--------------------------------------
 
+	#----------------------marc-dat --------------------------------------
+	#generate marc dat file
+	#test to see if the binary marc field exists and has data
+	if 'mdah.marcdat' in i and i['mdah.marcdat'] != "":
+		marc = open(path + '/marc.dat', 'w')		## open marc.dat file to write
+		marc.write(i['mdah.marcdat'])	
+		marc.close()
+		print 'marc.dat for %s written.' % path
+	#----------------------marc-dat done--------------------------------------
 
 	#----------------------write dublin core --------------------------------------
 	#generate dublin core file
