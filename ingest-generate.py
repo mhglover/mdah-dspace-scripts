@@ -52,8 +52,12 @@ parser.add_argument('-c', '--carryon', action='store_true', help='ignore existin
 args = parser.parse_args()
 
 if args.force:
- 	print 'deleting %s folder and contents' % args.outdir
- 	shutil.rmtree(args.outdir)
+	try:
+		shutil.rmtree(args.outdir)
+	except StandardError as e:
+		print 'ERROR: ' + args.outdir + ' is not present. Will create directory.'
+	else:
+		print 'deleting %s folder and contents' % args.outdir
 
 
 #generate the root target directory
