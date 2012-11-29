@@ -34,9 +34,9 @@ function add(type) {
 <body>
 	<center>
 	<form name = "dspace-handles" action="dspace-order.py">
-		<h2>Enter DSpace identifier URIs.</h2>
+		<h2>Enter Koha catalog IDs.</h2>
 
-		<p>Click 'Add' to enter a new URI. 'Submit' when done.</p>
+		<p>Click 'Add' to enter a new Koha ID. 'Submit' when done.</p>
 
 		<input type="button" value="Add" onclick="add(document.forms.value)"/>
 
