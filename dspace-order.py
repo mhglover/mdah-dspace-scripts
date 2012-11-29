@@ -5,8 +5,8 @@ import cgitb; cgitb.enable()  # for troubleshooting
 from lxml import etree
 import urllib2
 
-# TODO: able to enter Koha id's, error handling, checksum checking?
-# Set script in cgi folder for server (e.g. cgi-bin)
+# INSTRUCTIONS: Set script in cgi folder for server (e.g. cgi-bin), enter Koha id to generate download buttons for all files in PRESERVATION bundle
+# TODO: error handling, checksum checking?
 
 print "Content-Type: text/html"
 print
@@ -50,20 +50,22 @@ function add(type) {
 """ 
 
 form = cgi.FieldStorage()
-handles = form.getlist("handle")
+handles = form.getlist('handle')
 
 dspace_address = '10.8.4.245:8080'
 bitstreams = []
 
-for handle in handles:
- url = 'http://' + dspace_address + '/rest/items/' + handle + '/bundles.xml'
+for value in handles:
+ url = 'http://' + dspace_address + '/rest/search.xml?query=' + value  
   
  tree = 	etree.parse(urllib2.urlopen(url))
  
- # use XPath to locate bundle with name PRESERVATION and get each bitstream id in that bundle
- for node in tree.xpath('/bundles/bundle/name[.="PRESERVATION"]/../bitstreams/bitstream/id'):
-  url = 'http://10.8.4.245:8080/rest/bitstreams/' + node.text + '/download.xml'
-  print """<form action = %s> DSpace handle %s: <input type = "submit" value = %s></form>""" % (url, handle, node.text)
+ for node in tree.xpath('/search/searchresultsinfo/resultIDs/integer'): 
+  url = 'http://' + dspace_address + '/rest/items/' + node.text + '/bundles.xml'
+  items_tree = etree.parse(urllib2.urlopen(url))
+  for i in items_tree.xpath('bundle/name[.="PRESERVATION"]/preceding-sibling::bitstreams/bitstream/id'):
+   download_url = 'http://' + dspace_address + '/rest/bitstreams/' + i.text + '/download.xml'
+   print """<form action = %s> DSpace item: <input type = "submit" value = %s></form>""" % (download_url, i.text)
 
 print """\
 
