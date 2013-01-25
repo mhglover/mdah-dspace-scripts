@@ -7,8 +7,7 @@ import shutil
 import sys
 import urllib2
 
-
-def pull_files(fileslist, output, bundle):
+def pull_files(fileslist, output, permissions):
 	for f in fileslist:
 			#interpret wildcard for dc.identifier
 			s = '\[dc.identifier\]'
@@ -20,7 +19,7 @@ def pull_files(fileslist, output, bundle):
 				shutil.copy(f, path)
 				local = f.split('/')[-1]
 				print '%s copied' % local
-				output.write('%s\tbundle:%s\n' % (local, bundle))
+				output.write('%s\tpermissions:%s\n' % (local, permissions))
 
 			#check to see if this is a url
 			h = re.search('^http://', f)
@@ -38,7 +37,7 @@ def pull_files(fileslist, output, bundle):
 					webFile.close()
 					localFile.close()
 					print '%s downloaded' % local
-					output.write('%s\tbundle:%s\n' % (local, bundle))
+					output.write('%s\tpermissions:%s\n' % (local, permissions))
 
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
@@ -127,8 +126,7 @@ for i in data:
 			
 			if identifier != "" and value != "":
 				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, i[name]))
-		
-			
+					
 	### Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
 	### Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
 	
@@ -142,10 +140,7 @@ for i in data:
 
 	#----------------------start to write contents--------------------------------------
 	contents = open(path + '/contents', 'w')
-	contents.write('dublin_core.xml' + '\t' + 'bundle:ORIGINAL\n')
-	#----------------------end initial contents--------------------------------------
-
-
+		
 	#----------------------copy in files --------------------------------------
 	# the files field should be a plain list of the files that should be included
 	# we can use:
@@ -153,19 +148,17 @@ for i in data:
 	#	local paths			images/12321-photo.tif
 	#	absolute paths			/workspace/moncrief/images/12321-photo.tif
 	#	id-related wildcards		/workspace/moncrief/images/[dc.identifier]-photo.tif
+	
 	if 'mdah.files' in i and i['mdah.files'] != "":
 		fileslist = i['mdah.files'].split('\n')
-		pull_files(fileslist, contents, 'ORIGINAL')
-
-	#----------------------files done--------------------------------------
+		pull_files(fileslist, contents, " -r 'Anonymous'")
 
 	#---------------------preservation files -------------------------------
-	# Assign a file to a preservation bundle to keep the file inaccessible to certain users.
-	# contents.write(i['itembib']      + '-01-postcard.tif' + '\t' + 'bundle:PRESERVATION\n')
-
+	# Assign files under 'mdah.preservation' with restricted read permissions
+	
 	if 'mdah.preservation' in i and i['mdah.preservation'] != "":
 			fileslist = i['mdah.preservation'].split('\n')
-			pull_files(fileslist, contents, 'PRESERVATION')
+			pull_files(fileslist, contents, " -r 'Staff'")
 	
 	#----------------------finish contents--------------------------------------
 	contents.close()
