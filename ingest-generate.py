@@ -43,8 +43,8 @@ def pull_files(fileslist, output, bundle):
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
-parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process') ## source file, should be a properly formatted CSV
-parser.add_argument('outdir', default='test', help='the root for the directory structure to create') ## output folder
+parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process')
+parser.add_argument('outdir', default='test', help='the root for the directory structure to create')
 parser.add_argument('-f', '--force', action='store_true', help='delete and overwrite the output directory structure')
 parser.add_argument('-c', '--carryon', action='store_true', help='ignore existing output files and continue generating new ones')
 
@@ -74,8 +74,8 @@ for i in data:
 	path = args.outdir + '/' + i['dc.identifier']
 
 	#create target directories
-	if not os.path.exists(path):		## Check folder is not already there.
-		os.makedirs(path)			## Write folder from unique ID name	)	
+	if not os.path.exists(path):		## Check folder is not already there
+		os.makedirs(path)		## Write folder from unique ID name	
 		print '%s folder written.' % path
 	else:
 		print '%s folder already exists.' % path
@@ -83,33 +83,27 @@ for i in data:
 		continue
 
 	#----------------------marc-xml --------------------------------------
-	#generate marc xml file
-	#test to see if the xml marc field exists and has data
 	if 'mdah.marcxml' in i and i['mdah.marcxml'] != "":
-		marc = open(path + '/metadata_marc.xml', 'w')		## open metadata_marc.xml file to write
+		marc = open(path + '/metadata_marc.xml', 'w')
 		marc.write(i['mdah.marcxml'])	
 		marc.close()
 		print 'metadata_marc.xml for %s written.' % path
 	#----------------------marc-xml done--------------------------------------
 
 	#----------------------marc-dat --------------------------------------
-	#generate marc dat file
-	#test to see if the binary marc field exists and has data
 	if 'mdah.marcdat' in i and i['mdah.marcdat'] != "":
-		marc = open(path + '/marc.dat', 'w')		## open marc.dat file to write
+		marc = open(path + '/marc.dat', 'w')
 		marc.write(i['mdah.marcdat'])	
 		marc.close()
 		print 'marc.dat for %s written.' % path
 	#----------------------marc-dat done--------------------------------------
 
 	#----------------------write dublin core --------------------------------------
-	#generate dublin core file
-	dc = open(path + '/dublin_core.xml', 'w')			## open dublin_core.xml file
-	
+	dc = open(path + '/dublin_core.xml', 'w')
 	dc.write('<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')		
 	dc.write('<dublin_core>\n')
 	
-	### Map DC elements with optional qualifiers to the .csv headers. Examples:
+	### Map DC elements with optional qualifiers to the .csv headers.
 	### Reference: http://dublincore.org/documents/dcmi-terms/	
 
 	for name in i.keys():
@@ -147,8 +141,7 @@ for i in data:
 
 
 	#----------------------start to write contents--------------------------------------
-	contents = open(path + '/contents', 'w')	## open contents file
-
+	contents = open(path + '/contents', 'w')
 	contents.write('dublin_core.xml' + '\t' + 'bundle:ORIGINAL\n')
 	#----------------------end initial contents--------------------------------------
 
@@ -156,17 +149,15 @@ for i in data:
 	#----------------------copy in files --------------------------------------
 	# the files field should be a plain list of the files that should be included
 	# we can use:
-	#	urls							http://mdah.state.ms.us/arrec_digital_archives/moncrief/images/12321-photo.tif
-	#	local paths					images/12321-photo.tif
-	#	absolute paths				/workspace/moncrief/images/12321-photo.tif
+	#	urls				http://mdah.state.ms.us/arrec_digital_archives/moncrief/images/12321-photo.tif
+	#	local paths			images/12321-photo.tif
+	#	absolute paths			/workspace/moncrief/images/12321-photo.tif
 	#	id-related wildcards		/workspace/moncrief/images/[dc.identifier]-photo.tif
 	if 'mdah.files' in i and i['mdah.files'] != "":
 		fileslist = i['mdah.files'].split('\n')
 		pull_files(fileslist, contents, 'ORIGINAL')
 
 	#----------------------files done--------------------------------------
-
-
 
 	#---------------------preservation files -------------------------------
 	# Assign a file to a preservation bundle to keep the file inaccessible to certain users.
@@ -175,12 +166,6 @@ for i in data:
 	if 'mdah.preservation' in i and i['mdah.preservation'] != "":
 			fileslist = i['mdah.preservation'].split('\n')
 			pull_files(fileslist, contents, 'PRESERVATION')
-			
-	#---------------------preservation files -------------------------------
-
-
 	
 	#----------------------finish contents--------------------------------------
 	contents.close()
-
-	#----------------------contents done--------------------------------------
