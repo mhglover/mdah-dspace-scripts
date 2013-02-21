@@ -7,7 +7,7 @@ import shutil
 import sys
 import urllib2
 
-def pull_files(fileslist, output, permissions):
+def pull_files(fileslist, output, bundle, permissions=''):
 	for f in fileslist:
 			#interpret wildcard for dc.identifier
 			s = '\[dc.identifier\]'
@@ -19,7 +19,7 @@ def pull_files(fileslist, output, permissions):
 				shutil.copy(f, path)
 				local = f.split('/')[-1]
 				print '%s copied' % local
-				output.write('%s\tpermissions:%s\n' % (local, permissions))
+				output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
 
 			#check to see if this is a url
 			h = re.search('^http://', f)
@@ -37,7 +37,7 @@ def pull_files(fileslist, output, permissions):
 					webFile.close()
 					localFile.close()
 					print '%s downloaded' % local
-					output.write('%s\tpermissions:%s\n' % (local, permissions))
+					output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
 
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
@@ -140,6 +140,7 @@ for i in data:
 
 	#----------------------start to write contents--------------------------------------
 	contents = open(path + '/contents', 'w')
+        contents.write('dublin_core.xml' + '\t' + 'bundle:ORIGINAL\n')
 		
 	#----------------------copy in files --------------------------------------
 	# the files field should be a plain list of the files that should be included
@@ -151,14 +152,14 @@ for i in data:
 	
 	if 'mdah.files' in i and i['mdah.files'] != "":
 		fileslist = i['mdah.files'].split('\n')
-		pull_files(fileslist, contents, " -r 'Anonymous'")
+		pull_files(fileslist, contents, 'ORIGINAL')
 
 	#---------------------preservation files -------------------------------
-	# Assign files under 'mdah.preservation' with restricted read permissions
+	# Assign files under 'mdah.restricted' with restricted read permissions
 	
-	if 'mdah.preservation' in i and i['mdah.preservation'] != "":
-			fileslist = i['mdah.preservation'].split('\n')
-			pull_files(fileslist, contents, " -r 'Staff'")
+	if 'mdah.restricted' in i and i['mdah.restricted'] != "":
+			fileslist = i['mdah.restricted'].split('\n')
+			pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Staff'")
 	
 	#----------------------finish contents--------------------------------------
 	contents.close()
