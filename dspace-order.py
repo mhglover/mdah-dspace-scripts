@@ -52,7 +52,7 @@ function add(type) {
 form = cgi.FieldStorage()
 handles = form.getlist('handle')
 
-dspace_address = '10.8.4.245:8080'
+dspace_address = 'YOUR_DSPACE_ADDRESS'
 bitstreams = []
 
 for value in handles:
