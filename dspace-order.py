@@ -63,7 +63,7 @@ for value in handles:
  for node in tree.xpath('/search/searchresultsinfo/resultIDs/integer'): 
   url = 'http://' + dspace_address + '/rest/items/' + node.text + '/bundles.xml'
   items_tree = etree.parse(urllib2.urlopen(url))
-  for i in items_tree.xpath('bundle/name[.="PRESERVATION"]/preceding-sibling::bitstreams/bitstream/id'):
+  for i in items_tree.xpath('bundle/name[.="RESTRICTED"]/preceding-sibling::bitstreams/bitstream/id'):
    download_url = 'http://' + dspace_address + '/rest/bitstreams/' + i.text + '/download.xml'
    print """<form action = %s> DSpace item: <input type = "submit" value = %s></form>""" % (download_url, i.text)
 
