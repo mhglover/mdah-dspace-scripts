@@ -159,7 +159,7 @@ for i in data:
 	
 	if 'mdah.restricted' in i and i['mdah.restricted'] != "":
 			fileslist = i['mdah.restricted'].split('\n')
-			pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Staff'")
+			pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Restricted'")
 	
 	#----------------------finish contents--------------------------------------
 	contents.close()
