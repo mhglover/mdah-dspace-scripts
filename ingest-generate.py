@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import argparse
 import csv
+import cgi
 import os
 import re
 import shutil
@@ -42,8 +43,7 @@ def pull_files(fileslist, output, bundle, permissions=''):
 					
 					#if file is TIFF generate thumbnail (DSpace does not do this)
 					if local.endswith('.tif') or local.endswith('.tiff'):
-						localFileLocation = path + '/' + local
-						shellCommand = 'convert ' + localFileLocation + ' -resize 100x100 -set filename:fname "%t-100" +adjoin ' + path + '/"%[filename:fname].jpg"'
+						shellCommand = 'convert ' + path + '/' + local  + ' -resize 100x100 -set filename:fname "%t-100" +adjoin ' + path + '/"%[filename:fname].jpg"'
 						subprocess.call(shellCommand, shell=True)
 						print 'thumbnail for ' + local + ' written.'
 						output.write(os.path.splitext(local)[0] + '-100.jpg\tbundle:THUMBNAIL\n')					
@@ -126,11 +126,11 @@ for i in data:
 				identifier = q.group(1)
 				qualifier = q.group(2)
 
-		
-			value = i[name]
+			#cgi.escape will escape HTML characters
+			value = cgi.escape(i[name]) 
 			
 			if identifier != "" and value != "":
-				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, i[name]))
+				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, value))
 					
 	# Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
 	# Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
