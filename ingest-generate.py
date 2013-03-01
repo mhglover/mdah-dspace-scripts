@@ -4,6 +4,7 @@ import csv
 import os
 import re
 import shutil
+import subprocess
 import sys
 import urllib2
 
@@ -38,7 +39,14 @@ def pull_files(fileslist, output, bundle, permissions=''):
 					localFile.close()
 					print '%s downloaded' % local
 					output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
-
+					
+					#if file is TIFF generate thumbnail (DSpace does not do this)
+					if local.endswith('.tif') or local.endswith('.tiff'):
+						localFileLocation = path + '/' + local
+						shellCommand = 'convert ' + localFileLocation + ' -resize 100x100 -set filename:fname "%t-100" +adjoin ' + path + '/"%[filename:fname].jpg"'
+						subprocess.call(shellCommand, shell=True)
+						print 'thumbnail for ' + local + ' written.'
+						output.write(os.path.splitext(local)[0] + '-100.jpg\tbundle:THUMBNAIL\n')					
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
@@ -102,9 +110,6 @@ for i in data:
 	dc.write('<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')		
 	dc.write('<dublin_core>\n')
 	
-	### Map DC elements with optional qualifiers to the .csv headers.
-	### Reference: http://dublincore.org/documents/dcmi-terms/	
-
 	for name in i.keys():
 		if i[name] == "":
 			continue
@@ -127,8 +132,8 @@ for i in data:
 			if identifier != "" and value != "":
 				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, i[name]))
 					
-	### Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
-	### Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
+	# Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
+	# Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
 	
 	# dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">DC-TYPE-VALUE</dcvalue>\n')	
 	
@@ -140,7 +145,7 @@ for i in data:
 
 	#----------------------start to write contents--------------------------------------
 	contents = open(path + '/contents', 'w')
-        contents.write('dublin_core.xml' + '\t' + 'bundle:ORIGINAL\n')
+        contents.write('dublin_core.xml\tbundle:ORIGINAL\n')
 		
 	#----------------------copy in files --------------------------------------
 	# the files field should be a plain list of the files that should be included
@@ -154,12 +159,12 @@ for i in data:
 		fileslist = i['mdah.files'].split('\n')
 		pull_files(fileslist, contents, 'ORIGINAL')
 
-	#---------------------preservation files -------------------------------
+	#---------------------restricted files -------------------------------
 	# Assign files under 'mdah.restricted' with restricted read permissions
 	
-	if 'mdah.restricted' in i and i['mdah.restricted'] != "":
-			fileslist = i['mdah.restricted'].split('\n')
-			pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Restricted'")
+	if 'mdah.restricted' in i and i['mdah.restricted'] != '':
+		fileslist = i['mdah.restricted'].split('\n')
+		pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Restricted'")
 	
 	#----------------------finish contents--------------------------------------
 	contents.close()
