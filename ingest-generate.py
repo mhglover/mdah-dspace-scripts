@@ -45,8 +45,16 @@ def pull_files(fileslist, output, bundle, permissions=''):
 					if local.endswith('.tif') or local.endswith('.tiff'):
 						shellCommand = 'convert ' + path + '/' + local  + ' -resize 100x100 -set filename:fname "%t-100" +adjoin ' + path + '/"%[filename:fname].jpg"'
 						subprocess.call(shellCommand, shell=True)
-						print 'thumbnail for ' + local + ' written.'
+						print 'thumbnail 100 for ' + local + ' written.'
 						output.write(os.path.splitext(local)[0] + '-100.jpg\tbundle:THUMBNAIL\n')					
+					
+					#make other thumbs if user specified them
+					if args.thumb_list:
+						for thumb in args.thumb_list:
+							subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+							print 'thumbnail ' + thumb + ' for ' + local + ' written.'
+							output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
+
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
@@ -54,7 +62,7 @@ parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'),
 parser.add_argument('outdir', default='test', help='the root for the directory structure to create')
 parser.add_argument('-f', '--force', action='store_true', help='delete and overwrite the output directory structure')
 parser.add_argument('-c', '--carryon', action='store_true', help='ignore existing output files and continue generating new ones')
-
+parser.add_argument('-t', '--thumb', action='append', dest='thumb_list', default = [], help='specify additional thumbs to make from tiffs, if present. 100px thumbs are made automatically. Value specifices longest side of image. Examples values: 1) -t 500 -t 1024 2) -t 2400 ... etc.')
 
 args = parser.parse_args()
 
@@ -66,7 +74,6 @@ if args.force:
 	else:
 		print 'deleting %s folder and contents' % args.outdir
 
-
 #generate the root target directory
 if not os.path.exists(args.outdir):
 	os.makedirs(args.outdir)
@@ -75,14 +82,13 @@ else:
 	if not args.carryon:
 		sys.exit()
 
-data = csv.DictReader(args.infile)	## Put .csv data in key-value table
+data = csv.DictReader(args.infile)		# Put .csv data in key-value table
 
 for i in data:	
 	path = args.outdir + '/' + i['dc.identifier']
 
-	#create target directories
-	if not os.path.exists(path):		## Check folder is not already there
-		os.makedirs(path)		## Write folder from unique ID name	
+	if not os.path.exists(path):		# Check folder is not already there
+		os.makedirs(path)		# Write folder from unique ID name	
 		print '%s folder written.' % path
 	else:
 		print '%s folder already exists.' % path
