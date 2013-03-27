@@ -146,14 +146,14 @@ for i in data:
 	dc.write('</dublin_core>')
 	dc.close()																			
 	print(path + '/dublin_core.xml written')
-	#----------------------dublin core done --------------------------------------
+	#----------------------dublin core done--------------------------------------
 
 
-	#----------------------start to write contents--------------------------------------
+	#---------------------- start to write contents--------------------------------------
 	contents = open(path + '/contents', 'w')
         contents.write('dublin_core.xml\tbundle:ORIGINAL\n')
 		
-	#----------------------copy in files --------------------------------------
+	#----------------------copy in files--------------------------------------
 	# the files field should be a plain list of the files that should be included
 	# we can use:
 	#	urls				http://mdah.state.ms.us/arrec_digital_archives/moncrief/images/12321-photo.tif
@@ -165,12 +165,19 @@ for i in data:
 		fileslist = i['mdah.files'].split('\n')
 		pull_files(fileslist, contents, 'ORIGINAL')
 
-	#---------------------restricted files -------------------------------
+	#---------------------restricted files-------------------------------
 	# Assign files under 'mdah.restricted' with restricted read permissions
 	
 	if 'mdah.restricted' in i and i['mdah.restricted'] != '':
 		fileslist = i['mdah.restricted'].split('\n')
 		pull_files(fileslist, contents, 'RESTRICTED', "permissions: -r 'Restricted'")
-	
+
+	#---------------------staff files----------------------------------------
+	# Assign files under 'mdah.staff' with restricted read permissions
+
+	if 'mdah.staff' in i and i['mdah.staff'] != '':
+		fileslist = i['mdah.staff'].split('\n')
+		pull_files(fileslist, contents, 'STAFF', "permissions: -r 'Staff'")
+
 	#----------------------finish contents--------------------------------------
 	contents.close()
