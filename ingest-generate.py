@@ -136,7 +136,11 @@ for i in data:
 			value = cgi.escape(i[name]) 
 			
 			if identifier != "" and value != "":
-				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, value))
+				
+				#multiple value entries if '%%' delimiter exists
+				value_list = value.split('%%')
+				for single_value in value_list:
+					dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, single_value))
 					
 	# Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
 	# Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
