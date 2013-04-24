@@ -48,12 +48,12 @@ def pull_files(fileslist, output, bundle, permissions=''):
 						print 'thumbnail 100 for ' + local + ' written.'
 						output.write(os.path.splitext(local)[0] + '-100.jpg\tbundle:THUMBNAIL\n')					
 					
-					#make other thumbs if user specified them
-					if args.thumb_list:
-						for thumb in args.thumb_list:
-							subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
-							print 'thumbnail ' + thumb + ' for ' + local + ' written.'
-							output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
+						#make other thumbs if user specified them
+						if args.thumb_list:
+							for thumb in args.thumb_list:
+								subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+								print 'thumbnail ' + thumb + ' for ' + local + ' written.'
+								output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
 
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
