@@ -41,20 +41,13 @@ def pull_files(fileslist, output, bundle, permissions=''):
 					print '%s downloaded' % local
 					output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
 					
-					#if file is TIFF generate thumbnail (DSpace does not do this)
+					#make JPEG derivative of TIFF, if user-specified
 					if local.endswith('.tif') or local.endswith('.tiff'):
-						shellCommand = 'convert ' + path + '/' + local  + ' -resize 100x100 -set filename:fname "%t-100" +adjoin ' + path + '/"%[filename:fname].jpg"'
-						subprocess.call(shellCommand, shell=True)
-						print 'thumbnail 100 for ' + local + ' written.'
-						output.write(os.path.splitext(local)[0] + '-100.jpg\tbundle:THUMBNAIL\n')					
-					
-						#make other thumbs if user specified them
 						if args.thumb_list:
 							for thumb in args.thumb_list:
 								subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
 								print 'thumbnail ' + thumb + ' for ' + local + ' written.'
 								output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
-
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
