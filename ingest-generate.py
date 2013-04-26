@@ -148,7 +148,6 @@ for i in data:
 
 	#---------------------- start to write contents--------------------------------------
 	contents = open(path + '/contents', 'w')
-        contents.write('dublin_core.xml\tbundle:ORIGINAL\n')
 		
 	#----------------------copy in files--------------------------------------
 	# the files field should be a plain list of the files that should be included
