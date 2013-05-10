@@ -26,27 +26,31 @@ def pull_files(fileslist, output, bundle, permissions=''):
 			#check to see if this is a url
 			h = re.search('^http://', f)
 			if h:
-				#try to open remote file
-				try:
-					webFile = urllib2.urlopen(f)
-				except IOError as e:
-					print 'ERROR: ' + f + ' could not be opened.'
-				else:
-					#if opened then write file to local machine
-					local = f.split('/')[-1]
-					localFile = open(path + '/' + local, 'w')
-					localFile.write(webFile.read())
-					webFile.close()
-					localFile.close()
-					print '%s downloaded' % local
-					output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
+
+				files_list = f.split('%%')
+				for single_file in files_list:
+				
+					#try to open remote file
+					try:
+						webFile = urllib2.urlopen(single_file)
+					except IOError as e:
+						print 'ERROR: ' + f + ' could not be opened.'
+					else:
+						#if opened then write file to local machine
+						local = single_file.split('/')[-1]
+						localFile = open(path + '/' + local, 'w')
+						localFile.write(webFile.read())
+						webFile.close()
+						localFile.close()
+						print '%s downloaded' % local
+						output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
 					
-					#make JPEG derivative of TIFF, if user-specified
-					if (local.endswith('.tif') or local.endswith('.tiff')) and args.thumb_list:
-						for thumb in args.thumb_list:
-							subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
-							print 'thumbnail ' + thumb + ' for ' + local + ' written.'
-							output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
+						#make JPEG derivative of TIFF, if user-specified
+						if (local.endswith('.tif') or local.endswith('.tiff')) and args.thumb_list:
+							for thumb in args.thumb_list:
+								subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+								print 'thumbnail ' + thumb + ' for ' + local + ' written.'
+								output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
 
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
@@ -126,13 +130,11 @@ for i in data:
 
 			#cgi.escape will escape HTML characters
 			value = cgi.escape(i[name]) 
-			
-			if identifier != "" and value != "":
-				
-				#multiple value entries if '%%' delimiter exists
-				value_list = value.split('%%')
-				for single_value in value_list:
-					dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, single_value))
+
+			#multiple value entries if '%%' delimiter exists
+			value_list = value.split('%%')
+			for single_value in value_list:
+				dc.write('<dcvalue element=\"%s\" qualifier=\"%s\">%s</dcvalue>\n' % (identifier, qualifier, single_value))
 					
 	# Set the DCMIType value to one listed here: http://dublincore.org/documents/dcmi-terms/#H7
 	# Example: dc.write('<dcvalue element=\"type\" qualifier=\"DCMIType\">Image</dcvalue>\n')
