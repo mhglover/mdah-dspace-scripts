@@ -45,21 +45,21 @@ def pull_files(fileslist, output, bundle, permissions=''):
 						localFile.close()
 						print '%s downloaded' % local
 						output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
-					
-						#make JPEG derivative of TIFF, if user-specified
-						if (local.endswith('.tif') or local.endswith('.tiff')) and args.thumb_list:
-							for thumb in args.thumb_list:
-								subprocess.call('convert ' + path + '/' + local  + ' -resize ' + thumb + 'x' + thumb + ' -set filename:fname "%t-' + thumb +'" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
-								print 'thumbnail ' + thumb + ' for ' + local + ' written.'
-								output.write(os.path.splitext(local)[0] + '-' + thumb + '.jpg\tbundle:ORIGINAL\n')
+				
+						make_jpeg(path, local)
 
+def make_jpeg (path, local):
+        if (local.endswith('.tif') or local.endswith('.tiff')):
+                subprocess.call('convert "' + path + '/' + local  + '" -resize 1024x1024 -set filename:fname "%t-1024" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+                print 'thumbnail 1024 for ' + local + ' written.'
+                contents.write(os.path.splitext(local)[0] + '-1024.jpg\tbundle:ORIGINAL\n')
+						
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
 parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process')
 parser.add_argument('outdir', default='test', help='the root for the directory structure to create')
 parser.add_argument('-f', '--force', action='store_true', help='delete and overwrite the output directory structure')
 parser.add_argument('-c', '--carryon', action='store_true', help='ignore existing output files and continue generating new ones')
-parser.add_argument('-t', '--thumb', action='append', dest='thumb_list', default = [], help='specify additional thumbs to make from tiffs, if present. 100px thumbs are made automatically. Value specifices longest side of image. Examples values: 1) -t 500 -t 1024 2) -t 2400 ... etc.')
 
 args = parser.parse_args()
 
