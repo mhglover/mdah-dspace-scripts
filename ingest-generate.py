@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import urllib
 import urllib2
 
 def pull_files(fileslist, output, bundle, permissions=''):
@@ -32,9 +33,9 @@ def pull_files(fileslist, output, bundle, permissions=''):
 				
 					#try to open remote file
 					try:
-						webFile = urllib2.urlopen(single_file)
+						webFile = urllib2.urlopen(urllib.quote(single_file, '://'))
 					except IOError as e:
-						print 'ERROR: ' + f + ' could not be opened.'
+						print 'ERROR: ' + single_file + ' could not be opened.'
 					else:
 						#if opened then write file to local machine
 						local = single_file.split('/')[-1]
