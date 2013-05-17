@@ -49,11 +49,14 @@ def pull_files(fileslist, output, bundle, permissions=''):
 						make_jpeg(path, local)
 
 def make_jpeg (path, local):
-        if (local.endswith('.tif') or local.endswith('.tiff')):
-                subprocess.call('convert "' + path + '/' + local  + '" -resize 1024x1024 -set filename:fname "%t-1024" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
-                print 'thumbnail 1024 for ' + local + ' written.'
-                contents.write(os.path.splitext(local)[0] + '-1024.jpg\tbundle:ORIGINAL\n')
-						
+        if (local.lower().endswith('.tif') or local.lower().endswith('.tiff')):
+                convert_cmd = subprocess.call('convert "' + path + '/' + local  + '" -resize 1024x1024 -set filename:fname "%t-1024" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+                if (convert_cmd != 0):
+                        print 'ERROR: ' + local + ' was not converted.'
+                else:
+                        print 'thumbnail 1024 for ' + local + ' written.'
+                        contents.write(os.path.splitext(local)[0] + '-1024.jpg\tbundle:ORIGINAL\n')
+                        
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
 parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process')
