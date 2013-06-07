@@ -27,10 +27,9 @@ def pull_files(fileslist, output, bundle, permissions=''):
 			#check to see if this is a url
 			h = re.search('^http://', f)
 			if h:
-
 				files_list = f.split('%%')
 				for single_file in files_list:
-				
+	
 					#try to open remote file
 					try:
 						webFile = urllib2.urlopen(urllib.quote(single_file, '://'))
@@ -45,24 +44,51 @@ def pull_files(fileslist, output, bundle, permissions=''):
 						localFile.close()
 						print '%s downloaded' % local
 						output.write('%s\tbundle:%s\t%s\n' % (local, bundle, permissions))
-				
+						
+						if args.preservation:
+							make_preservation(path, local)
+
 						make_jpeg(path, local)
+						
+
+def make_preservation (path, local):
+	
+	#preservation derivatives follow Archivematica's chart: https://www.archivematica.org/wiki/Format_policies
+	file_name, file_extension = os.path.splitext(local)
+	
+	#text documents, convert to ODT
+	if (file_extension.lower() == '.wpd' or file_extension.lower() == '.wbk' or file_extension.lower() == '.rtf'):
+		subprocess.call('unoconv -f odt "' + path + '/' + local + '"', shell=True)
+	 	contents.write(os.path.splitext(local)[0] + '.odt\tbundle:PRESERVATION\n')
+	
+	#pdf documents
+	if (file_extension.lower() == '.pdf'):
+		
+		#convert to PDF/A
+		subprocess.call('unoconv -o "' + path + '/' + os.path.splitext(local)[0] + '.archive.pdf' + '" -f pdf -eSelectPdfVersion=1 "' + path + '/' + local + '"', shell=True)
+                contents.write(os.path.splitext(local)[0] + '.archive.pdf\tbundle:PRESERVATION\n')
+	
+	#saved emails, convert to mime/mbox
+	if (file_extension.lower() == '.msg'):
+		subprocess.call('(cd ' + path + '&& perl -w /usr/bin/msgconvert.pl "' + local + '")', shell=True)
+                contents.write(os.path.splitext(local)[0] + '.msg.mime\tbundle:PRESERVATION\n')
 
 def make_jpeg (path, local):
-        if (local.lower().endswith('.tif') or local.lower().endswith('.tiff')):
-                convert_cmd = subprocess.call('convert "' + path + '/' + local  + '" -resize 1024x1024 -set filename:fname "%t-1024" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
-                if (convert_cmd != 0):
-                        print 'ERROR: ' + local + ' was not converted.'
-                else:
-                        print 'thumbnail 1024 for ' + local + ' written.'
-                        contents.write(os.path.splitext(local)[0] + '-1024.jpg\tbundle:ORIGINAL\n')
-                        
+	if (local.lower().endswith('.tif') or local.lower().endswith('.tiff')):
+		convert_cmd = subprocess.call('convert "' + path + '/' + local  + '" -resize 1024x1024 -set filename:fname "%t-1024" +adjoin ' + path + '/"%[filename:fname].jpg"', shell=True)
+		if (convert_cmd != 0):
+			print 'ERROR: ' + local + ' was not converted.'
+		else:
+			print 'thumbnail 1024 for ' + local + ' written.'
+			contents.write(os.path.splitext(local)[0] + '-1024.jpg\tbundle:ORIGINAL\n')
+
 parser = argparse.ArgumentParser(description='generate a Simple Archive Format directory structure from a properly formatted CSV')
 
 parser.add_argument('infile', default='sample.csv', type=argparse.FileType('r'), help='the CSV to process')
 parser.add_argument('outdir', default='test', help='the root for the directory structure to create')
 parser.add_argument('-f', '--force', action='store_true', help='delete and overwrite the output directory structure')
 parser.add_argument('-c', '--carryon', action='store_true', help='ignore existing output files and continue generating new ones')
+parser.add_argument('-p', '--preservation', action='store_true', help='generate preservation formats for applicable files')
 
 args = parser.parse_args()
 
